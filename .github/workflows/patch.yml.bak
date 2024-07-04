@@ -16,11 +16,11 @@ on:
       custom_device_name:
         description: 'Custom device name (optional)'
         required: true
-        default: 'default_device'
+        default: '$(date)'
       custom_version:
         description: 'Custom version (optional)'
         required: true
-        default: 'default_version'
+        default: '$(date)'
 
 jobs:
   build:
@@ -153,11 +153,11 @@ jobs:
 
     - name: Recompile framework.jar
       run: |
-        [ ! -f framework.jar ] && return
-        cd framework
-        7z a -tzip ../framework_new.zip *
-        cd ..
-
+        if [ -f framework.jar ]; then
+            cd framework
+            7z a -tzip ../framework_new.zip *
+            cd ..
+        fi
     - name: Recompile services.jar
       run: |
         cd services

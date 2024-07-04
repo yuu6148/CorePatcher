@@ -16,11 +16,11 @@ on:
       custom_device_name:
         description: 'Custom device name (optional)'
         required: true
-        default: 'default_device'
+        default: '$(date)'
       custom_version:
         description: 'Custom version (optional)'
         required: true
-        default: 'default_version'
+        default: '$(date)'
 
 jobs:
   build:
@@ -101,12 +101,14 @@ jobs:
 
     - name: List decompiled files for debugging
       run: |
-        echo "Contents of classes directory:"
-        find classes
-        echo "Contents of classes2 directory:"
-        find classes2
-        echo "Contents of classes3 directory:"
-        find classes3
+        if [ -f framework.jar ]; then
+            echo "Contents of classes directory:"
+            find classes
+            echo "Contents of classes2 directory:"
+            find classes2
+            echo "Contents of classes3 directory:"
+            find classes3
+        fi
         echo "Contents of services_classes directory:"
         find services_classes
         echo "Contents of services_classes2 directory:"
