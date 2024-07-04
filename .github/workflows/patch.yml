@@ -56,9 +56,10 @@ jobs:
 
     - name: Verify framework.jar
       run: |
-        [ ! -f framework.jar ] && return
-        file framework.jar
-        hexdump -C framework.jar | head -n 10
+        if [ -f framework.jar ]; then
+            file framework.jar
+            hexdump -C framework.jar | head -n 10
+        fi
 
     - name: Verify services.jar
       run: |
@@ -75,22 +76,23 @@ jobs:
 
     - name: Extract framework.jar
       run: |
-        [ ! -f framework.jar ] && return
-        7z x framework.jar -oframework
-
+        if [ -f framework.jar ]; then
+            7z x framework.jar -oframework
+        fi
     - name: Extract services.jar
       run: 7z x services.jar -oservices
 
     - name: Decompile framework dex files
       run: |
-        [ ! -f framework.jar ] && return
-        java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes.dex -o classes
-        java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes2.dex -o classes2
-        java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes3.dex -o classes3
-        java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes4.dex -o classes4
-        java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes5.dex -o classes5
-        java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes6.dex -o classes6
-
+        if [ -f framework.jar ]; then
+            java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes.dex -o classes
+            java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes2.dex -o classes2
+            java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes3.dex -o classes3
+            java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes4.dex -o classes4
+            java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes5.dex -o classes5
+            java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} framework/classes6.dex -o classes6
+        fi
+        
     - name: Decompile services dex files
       run: |
         java -jar smali/baksmali/build/libs/baksmali.jar d -a ${{ github.event.inputs.android_api_level }} services/classes.dex -o services_classes
@@ -125,23 +127,24 @@ jobs:
 
     - name: Modify framework smali files
       run: |
-        [ ! -f framework.jar ] && return
-        python3 framework_patch.py
-
+        if [ -f framework.jar ]; then
+            python3 framework_patch.py
+        fi
+        
     - name: Modify services smali files
       run: |
         python3 services_patch.py
 
     - name: Recompile framework dex files
       run: |
-        [ ! -f framework.jar ] && return
-        java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes -o framework/classes.dex
-        java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes2 -o framework/classes2.dex
-        java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes3 -o framework/classes3.dex
-        java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes4 -o framework/classes4.dex
-        java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes5 -o framework/classes5.dex
-        java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes6 -o framework/classes6.dex
-
+        if [ -f framework.jar ]; then
+            java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes -o framework/classes.dex
+            java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes2 -o framework/classes2.dex
+            java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes3 -o framework/classes3.dex
+            java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes4 -o framework/classes4.dex
+            java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes5 -o framework/classes5.dex
+            java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} classes6 -o framework/classes6.dex
+        fi
     - name: Recompile services dex files
       run: |
         java -jar smali/smali/build/libs/smali.jar a -a ${{ github.event.inputs.android_api_level }} services_classes -o services/classes.dex
@@ -150,11 +153,11 @@ jobs:
 
     - name: Recompile framework.jar
       run: |
-        [ ! -f framework.jar ] && return
-        cd framework
-        7z a -tzip ../framework_new.zip *
-        cd ..
-
+        if [ -f framework.jar ]; then
+            cd framework
+            7z a -tzip ../framework_new.zip *
+            cd ..
+        fi
     - name: Recompile services.jar
       run: |
         cd services
@@ -177,28 +180,17 @@ jobs:
         cp aligned_services.jar magisk_module/system/framework/services.jar
 
     - name: Create Version From Link
-      run: |
-        if [ -z "${{ github.event.inputs.custom_version }}" ]; then
-          framework_url="${{ github.event.inputs.framework_jar_url }}"
-          version=$(echo $framework_url | grep -oP '(?<=V)[^/]*(?=/system)')
-          echo "version=${version}" >> $GITHUB_ENV
-        else
-          echo "version=${{ github.event.inputs.custom_version }}" >> $GITHUB_ENV
-        fi
-        if [ -z "${{ github.event.inputs.custom_device_name }}" ]; then
-          framework_url="${{ github.event.inputs.framework_jar_url }}"
-          device_name=$(echo $framework_url | grep -oP '(?<=redmi/)[^/]*(?=/-)')
-          echo "device_name=${device_name}" >> $GITHUB_ENV
-        else
-          echo "device_name=${{ github.event.inputs.custom_device_name }}" >> $GITHUB_ENV
-        fi
+      run: |                
+        echo "version=${{ github.event.inputs.custom_version }}" >> $GITHUB_ENV       
+        echo "device_name=${{ github.event.inputs.custom_device_name }}" >> $GITHUB_ENV
+        
         echo "version=${version}"
         echo "device_name=${device_name}"
 
     - name: Zip Magisk module
       run: |
         cd magisk_module
-        zip -r ../moded_framework_services_${{ env.device_name }}_${{ env.version }}.zip *
+        [ -f framework.jar ] && zip -r ../moded_framework_services_${{ env.device_name }}_${{ env.version }}.zip *
         cd ..
         mkdir -p out
         chmod +w moded_framework_services_${{ env.device_name }}_${{ env.version }}.zip
